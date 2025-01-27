@@ -1,0 +1,13 @@
+.grid-items {
+    //border: 1px solid #000;
+    padding: 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    //max-width: 300px;
+    margin: 5%;
+}
+
+.cell {
+    padding: 30px;
+}
