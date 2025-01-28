@@ -9,8 +9,8 @@ const INIT_BOARD = [
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 2, 1, 0, 0, 0],
+    [0, 0, 0, 1, 2, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -21,15 +21,17 @@ class OthelloGame {
         this.table = table; // 2D 配列としてテーブルを格納 (0: 空白, 1: 黒, 2: 白)
     }
 
-    // TODO: 石を置く
+    // 石を置く
     placeStone(row, col, player) {
         if (!this.canPlaceStone(row, col, player)) {
+            console.log("そこは置けないよ");
             return;
         }
         this.table[row][col] = player;
+        // TODO: 石をひっくり返す
     }
     
-    // TODO: どちらのプレイヤーが勝利したのかをチェック
+    // どちらのプレイヤーが勝利したのかをチェック
     checkWinner() {
         let numBlack = 0;
         let numWhite = 0;
@@ -131,16 +133,17 @@ const runPlayer = (event) => {
     // TODO: 石を置く
     if (isPlayer1Turn === true) {
         // alert("run player1!!!");
-        putBlackStone(cell);
+        // putBlackStone(cell);
         game.placeStone(row, col, 1);
     }
     if (isPlayer1Turn === false) {
         // alert("run player2!!!");
-        putWhiteStone(cell);
+        // putWhiteStone(cell);
         game.placeStone(row, col, 2);
     }
     // TODO: 画面を更新する
-    updateBoardView(board, game.table);
+    board = updateBoardView(board, game.table);
+    console.log(game.table);
 
     // TODO: ゲーム終了判定をする
     if (game.isGameOver() === true) {
@@ -168,6 +171,7 @@ const getBoard = () => {
 const makeBoardFrame = (board) => {
     //let board = document.getElementById("board");
     let tbl = document.createElement("table");
+    tbl.setAttribute("id", "table");
     let tblBody = document.createElement("tbody");
     for (let idx_row = 0; idx_row < BOARD_WIDTH; idx_row++) {
         let row = document.createElement("tr");
@@ -187,10 +191,13 @@ const makeBoardFrame = (board) => {
 
 // 画面更新関数
 const updateBoardView = (board_view, board_array) => {
-    let board = document.getElementById("board");
-    //document.delete board.
+    const table = document.getElementById("table");
+    if (table !== null) {
+        table.remove();
+    }
 
     let tbl = document.createElement("table");
+    tbl.setAttribute("id", "table");
     let tblBody = document.createElement("tbody");
     for (let idx_row = 0; idx_row < BOARD_WIDTH; idx_row++) {
         let row = document.createElement("tr");
@@ -206,7 +213,7 @@ const updateBoardView = (board_view, board_array) => {
     tbl.appendChild(tblBody);
     tbl.setAttribute("border", "2");
     board_view.appendChild(tbl);
-    return board;
+    return board_view;
     
     
 }
