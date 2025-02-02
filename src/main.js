@@ -23,8 +23,8 @@ const INIT_BOARD = [
     [0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
-let game_controller = null;
-let game_screen = null;
+let gameController = null;
+let gameScreen = null;
 
 function moveRight([row, col]) {
     return [row, col + 1];
@@ -65,10 +65,10 @@ class OthelloGame {
             return;
         }
         this.table[row][col] = this.currentPlayer;
-        // TODO: - [x] 石をひっくり返す
+        // 石をひっくり返す
         this.flipOverSandwichedStones(row, col);
 
-        // TODO: - [x] player をスイッチする
+        // player をスイッチする
         this.currentPlayer = this.switchPlayer(this.currentPlayer);
     }
 
@@ -296,7 +296,7 @@ class OthelloScreen {
                 if (game.table[idx_row][idx_col] === PLAYER2) {
                     cell.className += ` ${CSS_CLASS_PLAYER2_STONE}`;
                 }
-                cell.addEventListener("click", runPlayer);
+                cell.addEventListener("click", runOneTurn);
                 row.appendChild(cell);
             }
             tblBody.appendChild(row);
@@ -308,7 +308,8 @@ class OthelloScreen {
     }
 }
 
-const runPlayer = (event) => {
+// オセロの 1 ターンを進める
+const runOneTurn = (event) => {
     console.log("PLAY");
 
     const cell = event.target;
@@ -319,33 +320,28 @@ const runPlayer = (event) => {
     const col = cell.cellIndex;            // 列番号を取得
     console.log(`Clicked cell at row: ${row}, col: ${col}`);
 
-    // TODO: - [x] 石を置く
-    game_controller.placeStone(row, col);
+    // 石を置く
+    gameController.placeStone(row, col);
 
-    // TODO: - [x] 画面を更新する
-    game_screen.reflectGameState(game_controller);
-    console.log(game_controller.table);
+    // 画面を更新する
+    gameScreen.reflectGameState(gameController);
+    console.log(gameController.table);
 
-    // TODO: - [x] ゲーム終了判定をする
-    // TODO: - [x] 終了したら勝利者を表示する
-    console.log("isGameOver: ", game_controller.isGameOver());
-    if (game_controller.isGameOver()) {
-        alert(`GAME!! The winner is player-${game_controller.checkWinner()}`);
+    // ゲーム終了判定をする
+    // 終了したら勝利者を表示する
+    console.log("isGameOver: ", gameController.isGameOver());
+    if (gameController.isGameOver()) {
+        alert(`GAME!! The winner is player-${gameController.checkWinner()}`);
     }
 }
-
-const foo = () => {
-    console.log("hogehoge");
-}
-
 
 const createBoard = () => {
     console.log("createBoard");
 
     // 新しいゲームを開始
-    game_controller = new OthelloGame(JSON.parse(JSON.stringify(INIT_BOARD)));
-    game_screen = new OthelloScreen();
+    gameController = new OthelloGame(JSON.parse(JSON.stringify(INIT_BOARD)));
+    gameScreen = new OthelloScreen();
 
     // ボードを表示
-    game_screen.reflectGameState(game_controller);
+    gameScreen.reflectGameState(gameController);
 }
