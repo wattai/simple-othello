@@ -3,15 +3,22 @@
     <head>
         <meta http-equiv="content-type" charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script type="text/javascript" src="./main.js"></script>
-        <link rel="stylesheet" href="index.css">
-        <title>オセロゲーム</title>
+        <link rel="stylesheet" href="./index.css">
+        <title>シンプルなオセロゲーム</title>
     </head>
 
     <body>
-        <h1>オセロゲーム</h1>
-        <button class="start-button" onclick="createBoard()">ゲームスタート</button>
-        <div id="board" class="grid-items"></div>
+        <h1>シンプルなオセロゲーム</h1>
+        <div class="start-button">
+            <button class="start-button" onclick="createBoard()">ゲームスタート</button>
+            <div id="player-indicator" class="player-indicator"></div>
+        </div>
+        <div id="board-placeholder" class="board"></div>
+
+        <script type="text/javascript" src="./main.js"></script>
     </body>
-    <footer>THIS IS FOOTER</footer>
+    <footer>
+        written by
+        <a href="https://github.com/wattai">@wattai</a>
+    </footer>
 </html>

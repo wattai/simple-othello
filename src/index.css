@@ -1,13 +1,47 @@
-.grid-items {
-    //border: 1px solid #000;
-    padding: 3px;
-    display: flex;
+.board {
+    /*border: 1px solid #000;*/
+    padding: 1%;
+    display: grid;
     justify-content: center;
     align-items: center;
-    //max-width: 300px;
-    margin: 5%;
+    /*max-width: 300px;*/
+    margin: 1%;
+    grid-template-rows: 1fr;
+    grid-template-columns: 2fr;
+}
+
+.start-button {
+    display: flex;
+    padding: 100px;
+    font-size: 5rem;
+    justify-content: center;
+    align-items: center;
+    max-height: 200px;
+}
+
+.player-indicator {
+    font-size: 5rem;
+    padding: 5%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.board {
+    color: grey;
 }
 
 .cell {
-    padding: 30px;
+    padding: 20px;
+    background-color: lightgreen;
+}
+
+.player1-stone {
+    background-color: black;
+}
+
+.player2-stone {
+    background-color: white;
+}
+
+.placeable {
+    background-color: lightyellow;
 }

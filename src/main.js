@@ -2,8 +2,15 @@
 
 const BOARD_WIDTH = 8;
 const NUM_PLAYERS = 2;
-let isPlayer1Turn = true;
-let isFinishGame = false;
+
+const EMPTY = 0;
+const PLAYER1 = 1;
+const PLAYER2 = 2;
+
+const CSS_CLASS_CELL = "cell";
+const CSS_CLASS_PLACEABLE = "placeable";
+const CSS_CLASS_PLAYER1_STONE = "player1-stone";
+const CSS_CLASS_PLAYER2_STONE = "player2-stone";
 
 const INIT_BOARD = [
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -16,21 +23,149 @@ const INIT_BOARD = [
     [0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
+let game_controller = null;
+let game_screen = null;
+
+function moveRight([row, col]) {
+    return [row, col + 1];
+}
+function moveLeft([row, col]) {
+    return [row, col - 1];
+}
+function moveUp([row, col]) {
+    return [row - 1, col];
+}
+function moveDown([row, col]) {
+    return [row + 1, col];
+}
+function moveUpRight([row, col]) {
+    return this.moveUp(this.moveRight([row, col]));
+}
+function moveDownRight([row, col]) {
+    return this.moveDown(this.moveRight([row, col]));
+}
+function moveUpLeft([row, col]) {
+    return this.moveUp(this.moveLeft([row, col]));
+}
+function moveDownLeft([row, col]) {
+    return this.moveDown(this.moveLeft([row, col]));
+}
+
 class OthelloGame {
     constructor(table) {
         this.table = table; // 2D 配列としてテーブルを格納 (0: 空白, 1: 黒, 2: 白)
+        this.currentPlayer = PLAYER1;
     }
 
     // 石を置く
-    placeStone(row, col, player) {
-        if (!this.canPlaceStone(row, col, player)) {
+    placeStone(row, col) {
+        console.log("CALL: placeStone")
+        if (!this.canPlaceStone(row, col, this.currentPlayer)) {
             console.log("そこは置けないよ");
             return;
         }
-        this.table[row][col] = player;
-        // TODO: 石をひっくり返す
+        this.table[row][col] = this.currentPlayer;
+        // TODO: - [x] 石をひっくり返す
+        this.flipOverSandwichedStones(row, col);
+
+        // TODO: - [x] player をスイッチする
+        this.currentPlayer = this.switchPlayer(this.currentPlayer);
     }
-    
+
+    switchPlayer(currentPlayer) {
+        return Math.abs(currentPlayer - 3);
+    }
+
+    flipOverSandwichedStones(row, col) {
+        // row: 石を置いた行
+        // col: 石を置いた列
+        for (const moveFn of [
+            moveRight,
+            moveDownRight,
+            moveDown,
+            moveDownLeft,
+            moveLeft,
+            moveUpLeft,
+            moveUp,
+            moveUpRight,
+        ]) {
+            let isSearching = false;
+            let edgeStoneCandidate = null;
+            let candidatesToBeflipped = [];
+            let currentRow = row;
+            let currentCol = col;
+            for (const idx of Array(BOARD_WIDTH).keys()) {
+                const [nextRow, nextCol] = moveFn([currentRow, currentCol]);
+                if (this.checkIfOutOfBoard(nextRow, nextCol)) {
+                    break;
+                }
+                [
+                    isSearching,
+                    edgeStoneCandidate,
+                    candidatesToBeflipped,
+                ] = this._flipSandwichedStones(
+                    currentRow,
+                    currentCol,
+                    isSearching,
+                    edgeStoneCandidate,
+                    candidatesToBeflipped,
+                );
+                currentRow = nextRow;
+                currentCol = nextCol;
+            }
+        }
+    }
+
+    checkIfOutOfBoard(row, col) {
+        if (row < 0 || row >= BOARD_WIDTH) {
+            return true;
+        }
+        if (col < 0 || col >= BOARD_WIDTH) {
+            return true;
+        }
+        return false;
+    }
+
+    _flipSandwichedStones(
+        row,
+        col,
+        isSearching,
+        edgeStoneCandidate,
+        candidatesToBeflipped
+    ) {
+        if (this.table[row][col] !== PLAYER1 && this.table[row][col] !== PLAYER2) {
+            // 石が置かれていなければ
+            // 検索状態を初期化
+            isSearching = false;
+            edgeStoneCandidate = null;
+            candidatesToBeflipped = [];
+        } else {
+            // 石が置かれていれば
+            if (!isSearching) {
+                isSearching = true;
+                edgeStoneCandidate = this.table[row][col];
+            } else if (isSearching) {
+                if (this.table[row][col] === edgeStoneCandidate) {
+                    // 同じ色の石ならば
+                    // 候補の石をひっくり返す
+                    console.log(candidatesToBeflipped);
+                    for (const [y, x] of candidatesToBeflipped) {
+                        this.table[y][x] = this.table[row][col];
+                    }
+                    // 検索状態を初期化
+                    isSearching = false;
+                    edgeStoneCandidate = null;
+                    candidatesToBeflipped = [];
+                } else {
+                    // 違う色の石ならば
+                    // 候補に石の座標を追加する
+                    candidatesToBeflipped.push([row, col]);
+                }
+            }
+        }
+        return [isSearching, edgeStoneCandidate, candidatesToBeflipped];
+    }
+
     // どちらのプレイヤーが勝利したのかをチェック
     checkWinner() {
         let numBlack = 0;
@@ -41,8 +176,8 @@ class OthelloGame {
                 if (cell === 2) numWhite += 2;
             }
         }
-        if (numBlack > numWhite) return 1;  // 黒: 1
-        if (numBlack < numWhite) return 2;  // 白: 2
+        if (numBlack > numWhite) return PLAYER1;  // 黒: 1
+        if (numBlack < numWhite) return PLAYER2;  // 白: 2
         if (numBlack === numWhite) return 0;  // 引き分け: 0
     }
 
@@ -115,12 +250,66 @@ class OthelloGame {
     }
 }
 
-// ゲーム開始
-const game = new OthelloGame(INIT_BOARD);
+class OthelloScreen {
+    constructor() {
+        this.board_element = document.getElementById("board-placeholder");
+        this.player_indicator_element = document.getElementById("player-indicator");
+
+        if (!this.board_element) {
+            console.error("Error: board-placeholder element not found!");
+        }
+        if (!this.player_indicator_element) {
+            console.error("Error: player-indicator element not found!");
+        }
+    }
+
+    // 画面更新関数
+    reflectGameState(game) {
+        this.player_indicator_element.innerText = `player${game.currentPlayer}'s turn!`;
+        this.updateBoardView(game);
+    }
+
+    updateBoardView(game){
+        console.log("updateBoardView");
+        // 既にテーブルがある場合は削除する
+        const existingTable = document.getElementById("table");
+        if (existingTable !== null) {
+            existingTable.remove();
+        }
+
+        // 新しいテーブルを作成する
+        const new_table_element = document.createElement("table");
+        new_table_element.setAttribute("id", "table");
+        let tblBody = document.createElement("tbody");
+        for (let idx_row = 0; idx_row < BOARD_WIDTH; idx_row++) {
+            let row = document.createElement("tr");
+            for (let idx_col = 0; idx_col < BOARD_WIDTH; idx_col++) {
+                let cell = document.createElement("td");
+                cell.innerText = `${game.table[idx_row][idx_col]}`;
+                cell.className = CSS_CLASS_CELL;
+                if (game.canPlaceStone(idx_row, idx_col, game.currentPlayer)) {
+                    cell.className += ` ${CSS_CLASS_PLACEABLE}`;
+                }
+                if (game.table[idx_row][idx_col] === PLAYER1) {
+                    cell.className += ` ${CSS_CLASS_PLAYER1_STONE}`;
+                }
+                if (game.table[idx_row][idx_col] === PLAYER2) {
+                    cell.className += ` ${CSS_CLASS_PLAYER2_STONE}`;
+                }
+                cell.addEventListener("click", runPlayer);
+                row.appendChild(cell);
+            }
+            tblBody.appendChild(row);
+        }
+
+        new_table_element.appendChild(tblBody);
+        new_table_element.setAttribute("border", "2");
+        this.board_element.appendChild(new_table_element);
+    }
+}
 
 const runPlayer = (event) => {
     console.log("PLAY");
-    console.log(isPlayer1Turn);
 
     const cell = event.target;
     if (cell.tagName !== 'TD') {
@@ -130,126 +319,33 @@ const runPlayer = (event) => {
     const col = cell.cellIndex;            // 列番号を取得
     console.log(`Clicked cell at row: ${row}, col: ${col}`);
 
-    // TODO: 石を置く
-    if (isPlayer1Turn === true) {
-        // alert("run player1!!!");
-        // putBlackStone(cell);
-        game.placeStone(row, col, 1);
-    }
-    if (isPlayer1Turn === false) {
-        // alert("run player2!!!");
-        // putWhiteStone(cell);
-        game.placeStone(row, col, 2);
-    }
-    // TODO: 画面を更新する
-    board = updateBoardView(board, game.table);
-    console.log(game.table);
+    // TODO: - [x] 石を置く
+    game_controller.placeStone(row, col);
 
-    // TODO: ゲーム終了判定をする
-    if (game.isGameOver() === true) {
-        alert(`GAME!! The winner is ${isPlayer1Turn ? "player1" : "player2"}`);
+    // TODO: - [x] 画面を更新する
+    game_screen.reflectGameState(game_controller);
+    console.log(game_controller.table);
+
+    // TODO: - [x] ゲーム終了判定をする
+    // TODO: - [x] 終了したら勝利者を表示する
+    console.log("isGameOver: ", game_controller.isGameOver());
+    if (game_controller.isGameOver()) {
+        alert(`GAME!! The winner is player-${game_controller.checkWinner()}`);
     }
-    // TODO: 終了したら勝利者を表示する
-    isPlayer1Turn = !isPlayer1Turn;
 }
 
-const putBlackStone = (cell) => {
-    let stone = document.createElement("p");
-    stone.innerText = "B";
-    cell.appendChild(stone);
-}
-const putWhiteStone = (cell) => {
-    let stone = document.createElement("p");
-    stone.innerText = "W";
-    cell.appendChild(stone);
+const foo = () => {
+    console.log("hogehoge");
 }
 
-const getBoard = () => {
-    return document.getElementById("board");
-}
-
-const makeBoardFrame = (board) => {
-    //let board = document.getElementById("board");
-    let tbl = document.createElement("table");
-    tbl.setAttribute("id", "table");
-    let tblBody = document.createElement("tbody");
-    for (let idx_row = 0; idx_row < BOARD_WIDTH; idx_row++) {
-        let row = document.createElement("tr");
-        for (let idx_col = 0; idx_col < BOARD_WIDTH; idx_col++) {
-            let cell = document.createElement("td");
-            cell.className = "cell";
-            cell.addEventListener("click", runPlayer);
-            row.appendChild(cell);
-        }
-        tblBody.appendChild(row);
-    }
-    tbl.appendChild(tblBody);
-    tbl.setAttribute("border", "2");
-    board.appendChild(tbl);
-    return board;
-}
-
-// 画面更新関数
-const updateBoardView = (board_view, board_array) => {
-    const table = document.getElementById("table");
-    if (table !== null) {
-        table.remove();
-    }
-
-    let tbl = document.createElement("table");
-    tbl.setAttribute("id", "table");
-    let tblBody = document.createElement("tbody");
-    for (let idx_row = 0; idx_row < BOARD_WIDTH; idx_row++) {
-        let row = document.createElement("tr");
-        for (let idx_col = 0; idx_col < BOARD_WIDTH; idx_col++) {
-            let cell = document.createElement("td");
-            cell.innerText = `${board_array[idx_row][idx_col]}`;
-            cell.className = "cell";
-            cell.addEventListener("click", runPlayer);
-            row.appendChild(cell);
-        }
-        tblBody.appendChild(row);
-    }
-    tbl.appendChild(tblBody);
-    tbl.setAttribute("border", "2");
-    board_view.appendChild(tbl);
-    return board_view;
-    
-    
-}
 
 const createBoard = () => {
-    // TODO: clear board
-    board_view = getBoard();
-    board_view = makeBoardFrame(board_view);
+    console.log("createBoard");
 
-    // while(true) {
-    //     //board = runPlayer1();
-    //     if (isGameEnd(board) === true) {
-    //         alert("The winner is player1.");
-    //         break;
-    //     }
-    //     //board = runPlayer2();
-    //     if (isGameEnd(board) === true) {
-    //         alert("The winner is player2.");
-    //         break;
-    //     }
-    // }
+    // 新しいゲームを開始
+    game_controller = new OthelloGame(JSON.parse(JSON.stringify(INIT_BOARD)));
+    game_screen = new OthelloScreen();
+
+    // ボードを表示
+    game_screen.reflectGameState(game_controller);
 }
-
-// there are two players
-//
-
-// create board
-// if start button pressed
-//   clean board
-//   start game
-// iterate
-//   player-1: put a stone
-//   judge if it ends the game
-//   if ends: judge which one is the winner
-//   player-2: put a stone
-//   judge if it ends the game
-//   if ends: judge which one is the winner
-// display which one is the winner
-
