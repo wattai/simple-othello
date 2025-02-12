@@ -205,7 +205,7 @@ class OthelloGame {
         for (let row of this.table) {
             for (let cell of row) {
                 if (cell === 1) numBlack += 1;
-                if (cell === 2) numWhite += 2;
+                if (cell === 2) numWhite += 1;
             }
         }
         if (numBlack > numWhite) return PLAYER1;  // 黒: 1
