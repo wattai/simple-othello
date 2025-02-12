@@ -57,23 +57,55 @@ class OthelloGame {
         this.currentPlayer = PLAYER1;
     }
 
-    // 石を置く
-    placeStone(row, col) {
-        console.log("CALL: placeStone")
+    // 1ターン進める
+    runOneTurn(row, col) {
+        console.log("CALL: runOneTurn")
+        // 石が配置可能か調べる
         if (!this.canPlaceStone(row, col, this.currentPlayer)) {
             console.log("そこは置けないよ");
+            // できないならターン終了
             return;
         }
+
+        // 石を置く
         this.table[row][col] = this.currentPlayer;
+
         // 石をひっくり返す
         this.flipOverSandwichedStones(row, col);
 
         // player をスイッチする
         this.currentPlayer = this.switchPlayer(this.currentPlayer);
+
+        // スキップするべきか調べるため
+        // スイッチしたプレイヤーで置ける場所が1つ以上存在するかどうか調べる
+        if (this.shouldSkip(this.currentPlayer)) {
+            // プレイヤーを再度スイッチする
+            alert("打ち手がないためスキップします.");
+            this.currentPlayer = this.switchPlayer(this.currentPlayer);
+        }
+    }
+
+    shouldSkip(currentPlayer) {
+        // スキップするべきか調べる.
+        // スキップすべきかの基準: 置ける場所が1つ以上存在するかどうか.
+        for (const idx_row of Array(BOARD_WIDTH).keys()) {
+            for (const idx_col of Array(BOARD_WIDTH).keys()) {
+                if (this.canPlaceStone(idx_row, idx_col, this.currentPlayer)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     switchPlayer(currentPlayer) {
-        return Math.abs(currentPlayer - 3);
+        if (currentPlayer == PLAYER1) {
+            return PLAYER2;
+        }
+        if (currentPlayer == PLAYER2) {
+            return PLAYER1;
+        }
+        throw Error("Expected player value is either 1 or 2, but given unexpected value.");
     }
 
     flipOverSandwichedStones(row, col) {
@@ -320,8 +352,8 @@ const runOneTurn = (event) => {
     const col = cell.cellIndex;            // 列番号を取得
     console.log(`Clicked cell at row: ${row}, col: ${col}`);
 
-    // 石を置く
-    gameController.placeStone(row, col);
+    // 1ターン進める
+    gameController.runOneTurn(row, col);
 
     // 画面を更新する
     gameScreen.reflectGameState(gameController);
