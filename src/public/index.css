@@ -2,18 +2,6 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.board {
-    /*border: 1px solid #000;*/
-    padding: 1%;
-    display: grid;
-    justify-content: center;
-    align-items: center;
-    /*max-width: 300px;*/
-    margin: 1%;
-    grid-template-rows: 1fr;
-    grid-template-columns: 2fr;
-}
-
 .start-button {
     display: flex;
     padding: 20px;
@@ -29,12 +17,19 @@
 }
 
 .board {
-    color: grey;
+    display: grid;
+    justify-content: center;
+    align-items: center;
 }
 
 .cell {
-    padding: 20px;
+    padding: 0.5rem 1rem;
     background-color: lightgreen;
+
+    /* 文字を削除 */
+    text-indent: 500%;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .player1-stone {
