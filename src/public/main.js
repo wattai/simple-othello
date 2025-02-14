@@ -282,6 +282,15 @@ class OthelloGame {
     }
 }
 
+function num2PlayerColor(num) {
+    if (num === PLAYER1) {
+        return "黒";
+    } else if (num === PLAYER2) {
+        return "白";
+    }
+    throw Error(`Found unexpected arguments: ${num}.`);
+}
+
 class OthelloScreen {
     constructor() {
         this.board_element = document.getElementById("board-placeholder");
@@ -297,8 +306,12 @@ class OthelloScreen {
 
     // 画面更新関数
     reflectGameState(game) {
-        this.player_indicator_element.innerText = `player${game.currentPlayer}'s turn!`;
+        this.updateInfoText(`${num2PlayerColor(game.currentPlayer)}のターンです.`);
         this.updateBoardView(game);
+    }
+
+    updateInfoText(text) {
+        this.player_indicator_element.innerText = text;
     }
 
     updateBoardView(game){
@@ -363,7 +376,14 @@ const runOneTurn = (event) => {
     // 終了したら勝利者を表示する
     console.log("isGameOver: ", gameController.isGameOver());
     if (gameController.isGameOver()) {
-        alert(`GAME!! The winner is player-${gameController.checkWinner()}`);
+        const winner = gameController.checkWinner();
+        if (winner === PLAYER1 || winner === PLAYER2) {
+            gameScreen.updateInfoText(`${num2PlayerColor(winner)}の勝ちです.`);
+        } else if (winner === 0) {
+            gameScreen.updateInfoText(`引き分けです.`);
+        } else {
+            throw Error(`Found unexpected value in ${winner}.`);
+        }
     }
 }
 
