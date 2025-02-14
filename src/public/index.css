@@ -43,3 +43,9 @@
 .placeable {
     background-color: lightyellow;
 }
+
+footer {
+    position: absolute;
+    bottom: 0;
+    margin: 0.5%;
+}
