@@ -353,6 +353,78 @@ class OthelloScreen {
     }
 }
 
+async function callAI(table, placeablePositions) {
+    prompt = `
+        オセロゲームをしています。
+        黒は1,白は2,空白は0で表現されています。
+        次のターンで白(2で表現される)が置くべき座標値(行と列を表すための0~7の整数が2つ)を教えてください。
+        ボードの状態は以下のとおりです。
+        <board-state>
+        ${table}
+        </board-state>
+
+        以下は配置可能な座標のリストです。この中から選んでください。
+        <placeablePositions>
+        ${placeablePositions}
+        </placeablePositions>
+
+        返答は以下の<answer>タグで囲まれた中身のJSON形式に従ってください。
+        前置きの文章やコードブロックを示す指示子は不要です。
+        "row", "col" の中身の座標値はあなたが決定してください。
+        <answer>
+        {
+            "row": 0,
+            "col": 0
+        }
+        </answer>
+    `
+    console.log("プロンプト:");
+    console.log(prompt);
+    let response = null;
+    while (!response) {
+        response = await callOpenRouterLlm(prompt);
+    }
+    console.log(response);
+    return {
+        "row": placeablePositions[0].row,
+        "col": placeablePositions[0].col,
+        // "row": placeableLocations[0].row,
+        // "col": placeableLocations[0].col,
+    }
+}
+
+async function callOpenRouterLlm(prompt) {
+    try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                // 'HTTP-Referer': '<YOUR_SITE_URL>', // Optional. Site URL for rankings on openrouter.ai.
+                // 'X-Title': '<YOUR_SITE_NAME>', // Optional. Site title for rankings on openrouter.ai.
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'deepseek/deepseek-chat:free',
+                messages: [
+                {
+                    role: 'user',
+                    content: prompt,
+                },
+                ],
+            }),
+        });
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log(data);
+        return data;
+    } catch (error) {
+        console.error(error.message);
+        return null;
+    }
+}
+
 // オセロの 1 ターンを進める
 const runOneTurn = (event) => {
     console.log("PLAY");
@@ -367,6 +439,31 @@ const runOneTurn = (event) => {
 
     // 1ターン進める
     gameController.runOneTurn(row, col);
+
+    // 画面を更新する
+    gameScreen.reflectGameState(gameController);
+    console.log(gameController.table);
+
+    // AIのターンを進める
+    // TODO: [ ] AIからマスの座標を取得する
+    let placeablePositions = [];
+    for (let r = 0; r < BOARD_WIDTH; r++) {
+        for (let c = 0; c < BOARD_WIDTH; c++) {
+            gameController.canPlaceStone(r, c, PLAYER2);
+            placeablePositions.push({ row: c, col: c });
+        }
+    }
+    console.log(placeablePositions);
+    callAI(
+        gameController.table,
+        placeablePositions,
+    ).then(
+        ai_response => gameController.runOneTurn(
+            ai_response.row,
+            ai_response.col,
+        )
+    );
+    // gameController.runOneTurn(ai_response.row, ai_response.col);
 
     // 画面を更新する
     gameScreen.reflectGameState(gameController);
