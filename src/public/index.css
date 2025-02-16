@@ -75,6 +75,7 @@
 }
 
 .player1-placeable {
+    cursor: pointer;
     background-color: black;
     border-radius: 100%;
     opacity: 50%;
@@ -88,6 +89,7 @@
 }
 
 .player2-placeable {
+    cursor: pointer;
     background-color: white;
     border-radius: 100%;
     opacity: 50%;
