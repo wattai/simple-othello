@@ -8,7 +8,8 @@ const PLAYER1 = 1;
 const PLAYER2 = 2;
 
 const CSS_CLASS_CELL = "cell";
-const CSS_CLASS_PLACEABLE = "placeable";
+const CSS_CLASS_PLAYER1_PLACEABLE = "player1-placeable";
+const CSS_CLASS_PLAYER2_PLACEABLE = "player2-placeable";
 const CSS_CLASS_PLAYER1_STONE = "player1-stone";
 const CSS_CLASS_PLAYER2_STONE = "player2-stone";
 
@@ -105,7 +106,7 @@ class OthelloGame {
         if (currentPlayer == PLAYER2) {
             return PLAYER1;
         }
-        throw Error("Expected player value is either 1 or 2, but given unexpected value.");
+        throw new Error("Expected player value is either 1 or 2, but given unexpected value.");
     }
 
     flipOverSandwichedStones(row, col) {
@@ -288,7 +289,7 @@ function num2PlayerColor(num) {
     } else if (num === PLAYER2) {
         return "白";
     }
-    throw Error(`Found unexpected arguments: ${num}.`);
+    throw new Error(`Found unexpected arguments: ${num}.`);
 }
 
 class OthelloScreen {
@@ -330,26 +331,58 @@ class OthelloScreen {
             let row = document.createElement("tr");
             for (let idx_col = 0; idx_col < BOARD_WIDTH; idx_col++) {
                 let cell = document.createElement("td");
-                cell.innerText = `${game.table[idx_row][idx_col]}`;
                 cell.className = CSS_CLASS_CELL;
                 if (game.canPlaceStone(idx_row, idx_col, game.currentPlayer)) {
-                    cell.className += ` ${CSS_CLASS_PLACEABLE}`;
+                    let stone = document.createElement("div");
+                    if (game.currentPlayer === PLAYER1) {
+                        stone.className += ` ${CSS_CLASS_PLAYER1_PLACEABLE}`;
+                    }
+                    if (game.currentPlayer === PLAYER2) {
+                        stone.className += ` ${CSS_CLASS_PLAYER2_PLACEABLE}`;
+                    }
+                    stone.addEventListener("click", runOneTurn);
+                    cell.appendChild(stone);
                 }
+                let stone = document.createElement("div");
                 if (game.table[idx_row][idx_col] === PLAYER1) {
-                    cell.className += ` ${CSS_CLASS_PLAYER1_STONE}`;
+                    let stone = document.createElement("div");
+                    stone.className += ` ${CSS_CLASS_PLAYER1_STONE}`;
+                    cell.appendChild(stone);
                 }
                 if (game.table[idx_row][idx_col] === PLAYER2) {
-                    cell.className += ` ${CSS_CLASS_PLAYER2_STONE}`;
+                    let stone = document.createElement("div");
+                    stone.className += ` ${CSS_CLASS_PLAYER2_STONE}`;
+                    cell.appendChild(stone);
                 }
-                cell.addEventListener("click", runOneTurn);
                 row.appendChild(cell);
             }
             tblBody.appendChild(row);
         }
 
         new_table_element.appendChild(tblBody);
-        new_table_element.setAttribute("border", "2");
         this.board_element.appendChild(new_table_element);
+
+        // 4隅と中心の間の中点を4点描画する.
+        this.drawMidpoints();
+    }
+
+    drawMidpoints() {
+        const board = document.querySelectorAll(".cell");
+        console.log("CALL drawMidpoints");
+        console.log(board.className);
+
+        // 中点を追加するセルの位置
+        const midpoints = [
+            { row: 2, col: 2 },
+            { row: 2, col: 6 },
+            { row: 6, col: 2 },
+            { row: 6, col: 6 },
+        ];
+
+        midpoints.forEach(({ row, col }) => {
+            const index = row * BOARD_WIDTH + col;  // 1次元インデックスに変換
+            board[index].classList.add("midpoint");
+        });
     }
 }
 
@@ -357,12 +390,19 @@ class OthelloScreen {
 const runOneTurn = (event) => {
     console.log("PLAY");
 
-    const cell = event.target;
-    if (cell.tagName !== 'TD') {
+    const stone = event.target;
+    // 石が既に置いてある場合には置かない.
+    if (
+        !stone.className.includes(CSS_CLASS_PLAYER1_PLACEABLE)
+        &&
+        !stone.className.includes(CSS_CLASS_PLAYER2_PLACEABLE)
+    ) {
+        console.log("そこには置けないよ.");
         return;
     }
-    const row = cell.parentNode.rowIndex;  // 行番号を取得
-    const col = cell.cellIndex;            // 列番号を取得
+    // クリックされた座標を取得する.
+    const row = stone.parentNode.parentNode.rowIndex;
+    const col = stone.parentNode.cellIndex;
     console.log(`Clicked cell at row: ${row}, col: ${col}`);
 
     // 1ターン進める
@@ -382,7 +422,7 @@ const runOneTurn = (event) => {
         } else if (winner === 0) {
             gameScreen.updateInfoText(`引き分けです.`);
         } else {
-            throw Error(`Found unexpected value in ${winner}.`);
+            throw new Error(`Found unexpected value in ${winner}.`);
         }
     }
 }

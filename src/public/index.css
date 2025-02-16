@@ -17,31 +17,87 @@
 }
 
 .board {
-    display: grid;
     justify-content: center;
     align-items: center;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#table {
+    border: 5px solid black;
+    border-collapse: collapse;
 }
 
 .cell {
-    padding: 0.5rem 1rem;
-    background-color: lightgreen;
+    border: 1px solid black;
+    background-color: #2E8B57;
+    width: 2rem;
+    height: 2rem;
+    position: relative;
+}
 
-    /* 文字を削除 */
-    text-indent: 500%;
-    white-space: nowrap;
-    overflow: hidden;
+/* 盤面の4隅と中央の間の4点に黒い中点を追加 */
+.cell.midpoint::before {
+    content: "";
+    position: absolute;
+    width: 0.5rem; /* 小さい円 */
+    height: 0.5rem;
+    background-color: black;
+    border-radius: 50%;
+    top: 0%;
+    left: 0%;
+    transform: translate(-50%, -50%);
 }
 
 .player1-stone {
     background-color: black;
+    border-radius: 100%;
+
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .player2-stone {
     background-color: white;
+    border-radius: 100%;
+
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
-.placeable {
-    background-color: lightyellow;
+.player1-placeable {
+    background-color: black;
+    border-radius: 100%;
+    opacity: 50%;
+
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.player2-placeable {
+    background-color: white;
+    border-radius: 100%;
+    opacity: 50%;
+
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 footer {
