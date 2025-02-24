@@ -41,7 +41,7 @@ class LlmOtheller:
                         f" and say some words to express your emotion"
                         f" according to your situation."
                     ),
-                }
+                },
             ],
             response_format=OutFromLlm,
         )
@@ -49,19 +49,31 @@ class LlmOtheller:
 
 
 class StonePosition(BaseModel):
-    y: Annotated[int, Field(min=0, max=7, description="Vertical position on an othello board")]
-    x: Annotated[int, Field(min=0, max=7, description="Horizontal position on an othellow board")]
+    y: Annotated[
+        int, Field(min=0, max=7, description="Vertical position on an othello board")
+    ]
+    x: Annotated[
+        int, Field(min=0, max=7, description="Horizontal position on an othellow board")
+    ]
+
 
 class InputToLlm(BaseModel):
     current_board_state: Annotated[str, Field(title="board state")]
     stone_position_candicates: Annotated[list[StonePosition], Field(min_length=1)]
-    personality: Annotated[str, Field(default="A noob othello player", description="Personality of the AI player")]
+    personality: Annotated[
+        str,
+        Field(
+            default="A noob othello player", description="Personality of the AI player"
+        ),
+    ]
     language: Annotated[str, Field(default="ja")]
+
 
 class OutFromLlm(BaseModel):
     selected_stone_position: StonePosition
-    words_from_charactor: Annotated[str, Field(description="A few words as AI player's reaction for the situation")]
-
+    words_from_charactor: Annotated[
+        str, Field(description="A few words as AI player's reaction for the situation")
+    ]
 
 
 app = FastAPI()
@@ -69,6 +81,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://simple-othello-wattais-projects.vercel.app",
+        "https://simple-othello.vercel.app",
         "http://localhost",
     ],
     allow_credentials=True,
@@ -80,12 +93,14 @@ app.add_middleware(
 @app.post("/api/make-llm-choice-next-position")
 def make_llm_choice_next_position(input: InputToLlm) -> OutFromLlm:
     llm = LlmOtheller()
-    return llm.run(input=InputToLlm(
-        current_board_state=input.current_board_state,
-        stone_position_candicates=input.stone_position_candicates,
-        personality=input.personality,
-        language=input.language,
-    ))
+    return llm.run(
+        input=InputToLlm(
+            current_board_state=input.current_board_state,
+            stone_position_candicates=input.stone_position_candicates,
+            personality=input.personality,
+            language=input.language,
+        )
+    )
 
 
 if __name__ == "__main__":
