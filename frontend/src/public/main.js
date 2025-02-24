@@ -437,7 +437,6 @@ const runOneTurn = (event) => {
 }
 
 
-
 // オセロの 1 ターンを CPU が進める
 const runCpuOneTurn = () => {
     console.log("CPU PLAY");
@@ -539,6 +538,7 @@ function callLlm(
             return data;
         })
         .catch(error => {
+            console.log("Error:", error);
             console.error("Error:", error);
         });
 }
