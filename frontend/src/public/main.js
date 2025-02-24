@@ -56,6 +56,7 @@ class OthelloGame {
     constructor(table) {
         this.table = table; // 2D 配列としてテーブルを格納 (0: 空白, 1: 黒, 2: 白)
         this.currentPlayer = PLAYER1;
+        this.words_from_charactor = null;
     }
 
     // 1ターン進める
@@ -296,6 +297,7 @@ class OthelloScreen {
     constructor() {
         this.board_element = document.getElementById("board-placeholder");
         this.player_indicator_element = document.getElementById("player-indicator");
+        this.opponent_message_element = document.getElementById("opponent-message");
 
         if (!this.board_element) {
             console.error("Error: board-placeholder element not found!");
@@ -309,6 +311,10 @@ class OthelloScreen {
     reflectGameState(game) {
         this.updateInfoText(`${num2PlayerColor(game.currentPlayer)}のターンです.`);
         this.updateBoardView(game);
+    }
+
+    updateOpponentMessage(text) {
+        this.opponent_message_element.innerText = text;
     }
 
     updateInfoText(text) {
@@ -411,6 +417,7 @@ const runOneTurn = (event) => {
     // 画面を更新する
     gameScreen.reflectGameState(gameController);
     console.log(gameController.table);
+    gameScreen.updateOpponentMessage(gameController.words_from_charactor);
 
     // ゲーム終了判定をする
     // 終了したら勝利者を表示する
@@ -424,7 +431,113 @@ const runOneTurn = (event) => {
         } else {
             throw new Error(`Found unexpected value in ${winner}.`);
         }
+    } else {
+        runCpuOneTurn();
     }
+}
+
+
+
+// オセロの 1 ターンを CPU が進める
+const runCpuOneTurn = () => {
+    console.log("CPU PLAY");
+
+    // CPU が打てる手の候補をリストアップする
+    const candidates = [];
+    for (let idx_row = 0; idx_row < BOARD_WIDTH; idx_row++) {
+        for (let idx_col = 0; idx_col < BOARD_WIDTH; idx_col++) {
+            if (!gameController.canPlaceStone(idx_row, idx_col, PLAYER2)) {
+                continue;
+            }
+            candidates.push({
+                y: idx_col,
+                x: idx_row,
+            });
+        }
+    }
+    console.log("candidates");
+    console.log(candidates);
+
+    const runLlmPromise = callLlm(
+        current_board_state=`今の盤面は以下の通りです。1が黒(人間)で2が白(AI:あなた)です。\n${gameController.table}`,
+        stone_position_candidates=candidates,
+        personality="ずんだもん 語尾が「のだ」",
+        language="ja",
+    )
+    runLlmPromise.then(llmResponse => {
+        console.log("llmResponse");
+        console.log(llmResponse);
+        // LLM が配置不能な位置を出してきたときのために位置をランダムに決めておく.
+        let row = candidates[Math.floor(Math.random() * candidates.length)].x;
+        let col = candidates[Math.floor(Math.random() * candidates.length)].y;
+        // LLM が配置可能な位置を出してきたときはその位置に上書きする.
+        if (gameController.canPlaceStone(
+            llmResponse.selected_stone_position.x,
+            llmResponse.selected_stone_position.y,
+            PLAYER2,
+        )) {
+            row = llmResponse.selected_stone_position.x;
+            col = llmResponse.selected_stone_position.y;
+        }
+
+        // 1ターン進める
+        gameController.runOneTurn(row, col);
+
+        // 画面を更新する
+        gameScreen.reflectGameState(gameController);
+        console.log(gameController.table);
+        gameScreen.updateOpponentMessage(llmResponse.words_from_charactor);
+
+        // ゲーム終了判定をする
+        // 終了したら勝利者を表示する
+        console.log("isGameOver: ", gameController.isGameOver());
+        if (gameController.isGameOver()) {
+            const winner = gameController.checkWinner();
+            if (winner === PLAYER1 || winner === PLAYER2) {
+                gameScreen.updateInfoText(`${num2PlayerColor(winner)}の勝ちです.`);
+            } else if (winner === 0) {
+                gameScreen.updateInfoText(`引き分けです.`);
+            } else {
+                throw new Error(`Found unexpected value in ${winner}.`);
+            }
+        }
+    });
+}
+
+function callLlm(
+    current_board_state,
+    stone_position_candidates,
+    personality,
+    language,
+) {
+    const apiUrl = "http://localhost:8000"
+    const apiPath = "/api/make-llm-choice-next-position"
+    return fetch(`${apiUrl}${apiPath}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        mode: "cors",  // これが重要！
+        body: JSON.stringify({
+            current_board_state: current_board_state,
+            stone_position_candidates: stone_position_candidates,
+            personality: personality,
+            language: language,
+        }),
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);
+            return data;
+        })
+        .catch(error => {
+            console.error("Error:", error);
+        });
 }
 
 const createBoard = () => {

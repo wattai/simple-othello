@@ -2,18 +2,32 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.start-button {
+.control-panel {
     display: flex;
-    padding: 20px;
     font-size: 1rem;
     justify-content: center;
-    align-items: center;
-    max-height: 200px;
+    /* align-items: center; */
+    max-height: 100px;
+    /* height: 50px; */
+}
+
+.start-button {
+    height: 50px;
 }
 
 .player-indicator {
     font-size: 1rem;
-    padding: 5%;
+    padding: 2%;
+}
+
+.opponent-message {
+    display: flex;
+    font-size: 1rem;
+    margin: 5px;
+    height: 3rem;
+    width: 1fr;
+    justify-content: center;
+    align-items: center;
 }
 
 .board {
