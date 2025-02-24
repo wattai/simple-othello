@@ -412,28 +412,7 @@ const runOneTurn = (event) => {
     console.log(`Clicked cell at row: ${row}, col: ${col}`);
 
     // 1ターン進める
-    gameController.runOneTurn(row, col);
-
-    // 画面を更新する
-    gameScreen.reflectGameState(gameController);
-    console.log(gameController.table);
-    gameScreen.updateOpponentMessage(gameController.words_from_charactor);
-
-    // ゲーム終了判定をする
-    // 終了したら勝利者を表示する
-    console.log("isGameOver: ", gameController.isGameOver());
-    if (gameController.isGameOver()) {
-        const winner = gameController.checkWinner();
-        if (winner === PLAYER1 || winner === PLAYER2) {
-            gameScreen.updateInfoText(`${num2PlayerColor(winner)}の勝ちです.`);
-        } else if (winner === 0) {
-            gameScreen.updateInfoText(`引き分けです.`);
-        } else {
-            throw new Error(`Found unexpected value in ${winner}.`);
-        }
-    } else {
-        runCpuOneTurn();
-    }
+    proceedGame(row, col);
 }
 
 
@@ -457,18 +436,28 @@ const runCpuOneTurn = () => {
     console.log("candidates");
     console.log(candidates);
 
+    // LLM が配置不能な位置を出してきたときのために位置をランダムに決めておく.
+    const idx = Math.floor(Math.random() * candidates.length);
+    let row = candidates[idx].x;
+    let col = candidates[idx].y;
+
+    console.log("ARRAY")
+    console.log(arrayToString(gameController.table, indent=2));
+
     const runLlmPromise = callLlm(
-        current_board_state=`今の盤面は以下の通りです。1が黒(人間)で2が白(AI:あなた)です。\n${gameController.table}`,
+        current_board_state=`
+        今の盤面は以下の通りです。
+            1が黒(相手)で、2が白(あなた)です。
+            あなたは2(白)が勝つように手を打ってください。
+            \n${arrayToString(gameController.table)}
+        `,
         stone_position_candidates=candidates,
         personality="ずんだもん 語尾が「のだ」",
         language="ja",
-    )
+        )
     runLlmPromise.then(llmResponse => {
         console.log("llmResponse");
         console.log(llmResponse);
-        // LLM が配置不能な位置を出してきたときのために位置をランダムに決めておく.
-        let row = candidates[Math.floor(Math.random() * candidates.length)].x;
-        let col = candidates[Math.floor(Math.random() * candidates.length)].y;
         // LLM が配置可能な位置を出してきたときはその位置に上書きする.
         if (gameController.canPlaceStone(
             llmResponse.selected_stone_position.x,
@@ -478,29 +467,57 @@ const runCpuOneTurn = () => {
             row = llmResponse.selected_stone_position.x;
             col = llmResponse.selected_stone_position.y;
         }
-
-        // 1ターン進める
-        gameController.runOneTurn(row, col);
-
-        // 画面を更新する
-        gameScreen.reflectGameState(gameController);
-        console.log(gameController.table);
+        // キャラクター台詞を書く.
         gameScreen.updateOpponentMessage(llmResponse.words_from_charactor);
 
-        // ゲーム終了判定をする
-        // 終了したら勝利者を表示する
-        console.log("isGameOver: ", gameController.isGameOver());
-        if (gameController.isGameOver()) {
-            const winner = gameController.checkWinner();
-            if (winner === PLAYER1 || winner === PLAYER2) {
-                gameScreen.updateInfoText(`${num2PlayerColor(winner)}の勝ちです.`);
-            } else if (winner === 0) {
-                gameScreen.updateInfoText(`引き分けです.`);
-            } else {
-                throw new Error(`Found unexpected value in ${winner}.`);
-            }
-        }
+        // 1ターン進める
+        proceedGame(row, col);
+    }).catch(error => {
+        console.error(error);
+        // キャラクター台詞を書く.
+        gameScreen.updateOpponentMessage("難しい局面だ...");
+        // エラーが出たらランダムに決めた候補値が選ばれる.
+        // 1ターン進める
+        proceedGame(row, col)
     });
+}
+
+function arrayToString(array, indent = 0) {
+    if (!Array.isArray(array)) {
+        throw new Error("Input must be a 2D array.");
+    }
+    const indentStr = ' '.repeat(indent);
+    return '[' + array.map(row => {
+        if (!Array.isArray(row)) {
+            throw new Error("Each element must be an array.");
+        }
+        return indentStr + '\n  [' + row.map(String).join(', ') + ']';
+    }).join(',') + '' + indentStr + ']';
+}
+
+function proceedGame(row, col) {
+    // 1ターン進める
+    gameController.runOneTurn(row, col);
+
+    // 画面を更新する
+    gameScreen.reflectGameState(gameController);
+    console.log(gameController.table);
+
+    // ゲーム終了判定をする
+    // 終了したら勝利者を表示する
+    console.log("isGameOver: ", gameController.isGameOver());
+    if (gameController.isGameOver()) {
+        const winner = gameController.checkWinner();
+        if (winner === PLAYER1 || winner === PLAYER2) {
+            gameScreen.updateInfoText(`${num2PlayerColor(winner)}の勝ちです.`);
+        } else if (winner === 0) {
+            gameScreen.updateInfoText(`引き分けです.`);
+        } else {
+            throw new Error(`Found unexpected value in ${winner}.`);
+        }
+    } else if (gameController.currentPlayer === PLAYER2) {
+        runCpuOneTurn();
+    }
 }
 
 function callLlm(
