@@ -6,9 +6,8 @@
     display: flex;
     font-size: 1rem;
     justify-content: center;
-    /* align-items: center; */
+    align-items: center;
     max-height: 100px;
-    /* height: 50px; */
 }
 
 .start-button {
@@ -24,8 +23,10 @@
     display: flex;
     font-size: 1rem;
     margin: 5px;
-    height: 3rem;
+    height: 5rem;
     width: 1fr;
+    overflow: scroll;
+    margin: 1%;
     justify-content: center;
     align-items: center;
 }
