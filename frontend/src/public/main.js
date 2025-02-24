@@ -437,7 +437,6 @@ const runOneTurn = (event) => {
 }
 
 
-
 // オセロの 1 ターンを CPU が進める
 const runCpuOneTurn = () => {
     console.log("CPU PLAY");
@@ -510,7 +509,10 @@ function callLlm(
     personality,
     language,
 ) {
-    const apiUrl = "http://localhost:8000"
+    // const apiUrl = "http://localhost:8000"
+    const apiUrl = "https://simple-othello-api.vercel.app";
+    console.log("apiUrl");
+    console.log(apiUrl);
     const apiPath = "/api/make-llm-choice-next-position"
     return fetch(`${apiUrl}${apiPath}`, {
         method: "POST",
