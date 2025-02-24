@@ -77,7 +77,7 @@ app.add_middleware(
 )
 
 
-@app.post("/backend/make-llm-choice-next-position")
+@app.post("/api/make-llm-choice-next-position")
 def make_llm_choice_next_position(input: InputToLlm) -> OutFromLlm:
     llm = LlmOtheller()
     return llm.run(input=InputToLlm(
