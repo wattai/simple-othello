@@ -538,7 +538,6 @@ function callLlm(
             return data;
         })
         .catch(error => {
-            console.log("Error:", error);
             console.error("Error:", error);
         });
 }
