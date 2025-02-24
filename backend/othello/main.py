@@ -37,7 +37,7 @@ class LlmOtheller:
                     "role": "user",
                     "content": (
                         f"Think your next stone position"
-                        f" from these candidates: {input.stone_position_candicates}."
+                        f" from these candidates: {input.stone_position_candidates}."
                         f" and say some words to express your emotion"
                         f" according to your situation."
                     ),
@@ -59,7 +59,7 @@ class StonePosition(BaseModel):
 
 class InputToLlm(BaseModel):
     current_board_state: Annotated[str, Field(title="board state")]
-    stone_position_candicates: Annotated[list[StonePosition], Field(min_length=1)]
+    stone_position_candidates: Annotated[list[StonePosition], Field(min_length=1)]
     personality: Annotated[
         str,
         Field(
@@ -82,13 +82,13 @@ app.add_middleware(
     allow_origins=[
         "https://simple-othello-wattais-projects.vercel.app",
         "https://simple-othello.vercel.app",
-        "http://localhost",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.post("/api/make-llm-choice-next-position")
 def make_llm_choice_next_position(input: InputToLlm) -> OutFromLlm:
@@ -96,7 +96,7 @@ def make_llm_choice_next_position(input: InputToLlm) -> OutFromLlm:
     return llm.run(
         input=InputToLlm(
             current_board_state=input.current_board_state,
-            stone_position_candicates=input.stone_position_candicates,
+            stone_position_candidates=input.stone_position_candidates,
             personality=input.personality,
             language=input.language,
         )
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     out = make_llm_choice_next_position(
         InputToLlm(
             current_board_state="",
-            stone_position_candicates=[
+            stone_position_candidates=[
                 StonePosition(y=0, x=3),
                 StonePosition(y=4, x=2),
                 StonePosition(y=6, x=7),
