@@ -511,7 +511,7 @@ function callLlm(
     language,
 ) {
     // const apiUrl = "http://localhost:8000"
-    const apiUrl = "https://simple-othello.vercel.app";
+    const apiUrl = "https://simple-othello-api.vercel.app";
     console.log("apiUrl");
     console.log(apiUrl);
     const apiPath = "/api/make-llm-choice-next-position"
