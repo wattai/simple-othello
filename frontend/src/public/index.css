@@ -78,10 +78,6 @@
 }
 
 .player2-stone {
-    pointer-events: none;
-    touch-action: none;
-    user-select: none;
-
     background-color: white;
     border-radius: 100%;
 
@@ -109,9 +105,8 @@
 
 .player2-placeable {
     pointer-events: none;
-    touch-action: none;
-    user-select: none;
     cursor: pointer;
+
     background-color: white;
     border-radius: 100%;
     opacity: 50%;
