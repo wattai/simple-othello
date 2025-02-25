@@ -106,6 +106,7 @@
 .player2-placeable {
     pointer-events: none;
     cursor: pointer;
+
     background-color: white;
     border-radius: 100%;
     opacity: 50%;
