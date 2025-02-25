@@ -123,27 +123,32 @@ class OthelloGame {
             moveUp,
             moveUpRight,
         ]) {
-            let isSearching = false;
-            let edgeStoneCandidate = null;
             let candidatesToBeflipped = [];
             let currentRow = row;
             let currentCol = col;
+            console.log(moveFn.name);
             for (const idx of Array(BOARD_WIDTH).keys()) {
                 const [nextRow, nextCol] = moveFn([currentRow, currentCol]);
+                // ボード上からはみ出たら break
                 if (this.checkIfOutOfBoard(nextRow, nextCol)) {
                     break;
                 }
-                [
-                    isSearching,
-                    edgeStoneCandidate,
-                    candidatesToBeflipped,
-                ] = this._flipSandwichedStones(
-                    currentRow,
-                    currentCol,
-                    isSearching,
-                    edgeStoneCandidate,
-                    candidatesToBeflipped,
-                );
+                // 何もなければ break
+                if (this.table[nextRow][nextCol] === EMPTY) {
+                    console.log("EMPTY");
+                    break;
+                }
+                // 現在のプレイヤーと違う石だったら, 反転候補座標に入れる
+                if (this.table[nextRow][nextCol] === this.switchPlayer(this.currentPlayer)) {
+                    candidatesToBeflipped.push([nextRow, nextCol]);
+                }
+                // 現在のプレイヤーと同じ石だったら, 反転候補座標をひっくり返して, break
+                if (this.table[nextRow][nextCol] === this.currentPlayer) {
+                    for (const [r, c] of candidatesToBeflipped) {
+                        this.table[r][c] = this.currentPlayer;
+                    }
+                    break;
+                }
                 currentRow = nextRow;
                 currentCol = nextCol;
             }
@@ -158,46 +163,6 @@ class OthelloGame {
             return true;
         }
         return false;
-    }
-
-    _flipSandwichedStones(
-        row,
-        col,
-        isSearching,
-        edgeStoneCandidate,
-        candidatesToBeflipped
-    ) {
-        if (this.table[row][col] !== PLAYER1 && this.table[row][col] !== PLAYER2) {
-            // 石が置かれていなければ
-            // 検索状態を初期化
-            isSearching = false;
-            edgeStoneCandidate = null;
-            candidatesToBeflipped = [];
-        } else {
-            // 石が置かれていれば
-            if (!isSearching) {
-                isSearching = true;
-                edgeStoneCandidate = this.table[row][col];
-            } else if (isSearching) {
-                if (this.table[row][col] === edgeStoneCandidate) {
-                    // 同じ色の石ならば
-                    // 候補の石をひっくり返す
-                    console.log(candidatesToBeflipped);
-                    for (const [y, x] of candidatesToBeflipped) {
-                        this.table[y][x] = this.table[row][col];
-                    }
-                    // 検索状態を初期化
-                    isSearching = false;
-                    edgeStoneCandidate = null;
-                    candidatesToBeflipped = [];
-                } else {
-                    // 違う色の石ならば
-                    // 候補に石の座標を追加する
-                    candidatesToBeflipped.push([row, col]);
-                }
-            }
-        }
-        return [isSearching, edgeStoneCandidate, candidatesToBeflipped];
     }
 
     // どちらのプレイヤーが勝利したのかをチェック
@@ -236,7 +201,7 @@ class OthelloGame {
     // 指定した位置が合法手かどうかをチェック
     canPlaceStone(row, col, player) {
         // 既に埋まっている場合
-        if (this.table[row][col] !== 0)
+        if (this.table[row][col] !== EMPTY)
             return false;
 
         const directions = [
@@ -244,7 +209,7 @@ class OthelloGame {
             [-1, -1], [-1, 1], [1, -1], [1, 1]  // 斜め
         ];
 
-        const opponent = player === 1 ? 2 : 1;
+        const opponent = player === PLAYER1 ? PLAYER2 : PLAYER1;
 
         for (const [dx, dy] of directions) {
             let r = row + dx;
@@ -270,7 +235,7 @@ class OthelloGame {
     hasNoValidMoves() {
         for (let row = 0; row < this.table.length; row++) {
             for (let col = 0; col < this.table[row].length; col++) {
-                if (this.canPlaceStone(row, col, 1) || this.canPlaceStone(row, col, 2)) {
+                if (this.canPlaceStone(row, col, PLAYER1) || this.canPlaceStone(row, col, PLAYER2)) {
                     return false;  // どちらかが合法手を持っている場合
                 }
             }
@@ -339,23 +304,26 @@ class OthelloScreen {
                 let cell = document.createElement("td");
                 cell.className = CSS_CLASS_CELL;
                 if (game.canPlaceStone(idx_row, idx_col, game.currentPlayer)) {
-                    let stone = document.createElement("div");
                     if (game.currentPlayer === PLAYER1) {
+                        let stone = document.createElement("div");
                         stone.className += ` ${CSS_CLASS_PLAYER1_PLACEABLE}`;
+                        stone.addEventListener("click", runOneTurn);
+                        cell.appendChild(stone);
                     }
-                    if (game.currentPlayer === PLAYER2) {
+                    else if (game.currentPlayer === PLAYER2) {
+                        let stone = document.createElement("div");
                         stone.className += ` ${CSS_CLASS_PLAYER2_PLACEABLE}`;
+                        stone.addEventListener("click", runOneTurn);
+                        cell.appendChild(stone);
                     }
-                    stone.addEventListener("click", runOneTurn);
-                    cell.appendChild(stone);
                 }
-                let stone = document.createElement("div");
+                // let stone = document.createElement("div");
                 if (game.table[idx_row][idx_col] === PLAYER1) {
                     let stone = document.createElement("div");
                     stone.className += ` ${CSS_CLASS_PLAYER1_STONE}`;
                     cell.appendChild(stone);
                 }
-                if (game.table[idx_row][idx_col] === PLAYER2) {
+                else if (game.table[idx_row][idx_col] === PLAYER2) {
                     let stone = document.createElement("div");
                     stone.className += ` ${CSS_CLASS_PLAYER2_STONE}`;
                     cell.appendChild(stone);
@@ -399,7 +367,24 @@ const runOneTurn = (event) => {
     const stone = event.target;
     // 石が既に置いてある場合には置かない.
     if (
+        stone.className.includes(CSS_CLASS_PLAYER1_STONE)
+        ||
+        stone.className.includes(CSS_CLASS_PLAYER2_STONE)
+    ) {
+        console.log("そこには置けないよ.");
+        return;
+    }
+    // 配置可能でない場合には置かない.
+    if (
+        gameController.currentPlayer === PLAYER1
+        &&
         !stone.className.includes(CSS_CLASS_PLAYER1_PLACEABLE)
+    ) {
+        console.log("そこには置けないよ.");
+        return;
+    }
+    if (
+        gameController.currentPlayer === PLAYER2
         &&
         !stone.className.includes(CSS_CLASS_PLAYER2_PLACEABLE)
     ) {
@@ -526,7 +511,7 @@ function callLlm(
     personality,
     language,
 ) {
-    // const apiUrl = "http://localhost:8000"
+    // const apiUrl = "http://localhost:8000";
     const apiUrl = "https://simple-othello-api.vercel.app";
     console.log("apiUrl");
     console.log(apiUrl);

@@ -11,10 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 class LlmOtheller:
     def __init__(self):
-        self.client = OpenAI(
-            # organization="Personal",
-            project="proj_lO1NW7vyR49z8f5NSep1cSpk",
-        )
+        self.client = OpenAI()
         self.model = "gpt-4o-mini"
 
     def run(self, input: "InputToLlm") -> "OutFromLlm":
