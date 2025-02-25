@@ -287,7 +287,6 @@ class OthelloScreen {
     }
 
     updateBoardView(game){
-        console.log("updateBoardView");
         // 既にテーブルがある場合は削除する
         const existingTable = document.getElementById("table");
         if (existingTable !== null) {
@@ -342,8 +341,6 @@ class OthelloScreen {
 
     drawMidpoints() {
         const board = document.querySelectorAll(".cell");
-        console.log("CALL drawMidpoints");
-        console.log(board.className);
 
         // 中点を追加するセルの位置
         const midpoints = [
@@ -418,15 +415,12 @@ const runCpuOneTurn = () => {
             });
         }
     }
-    console.log("candidates");
-    console.log(candidates);
 
     // LLM が配置不能な位置を出してきたときのために位置をランダムに決めておく.
     const idx = Math.floor(Math.random() * candidates.length);
     let row = candidates[idx].x;
     let col = candidates[idx].y;
 
-    console.log("ARRAY")
     console.log(arrayToString(gameController.table, indent=2));
 
     const runLlmPromise = callLlm(
@@ -441,8 +435,6 @@ const runCpuOneTurn = () => {
         language="ja",
         )
     runLlmPromise.then(llmResponse => {
-        console.log("llmResponse");
-        console.log(llmResponse);
         // LLM が配置可能な位置を出してきたときはその位置に上書きする.
         if (gameController.canPlaceStone(
             llmResponse.selected_stone_position.x,
@@ -486,11 +478,9 @@ function proceedGame(row, col) {
 
     // 画面を更新する
     gameScreen.reflectGameState(gameController);
-    console.log(gameController.table);
 
     // ゲーム終了判定をする
     // 終了したら勝利者を表示する
-    console.log("isGameOver: ", gameController.isGameOver());
     if (gameController.isGameOver()) {
         const winner = gameController.checkWinner();
         if (winner === PLAYER1 || winner === PLAYER2) {
@@ -513,8 +503,6 @@ function callLlm(
 ) {
     // const apiUrl = "http://localhost:8000";
     const apiUrl = "https://simple-othello-api.vercel.app";
-    console.log("apiUrl");
-    console.log(apiUrl);
     const apiPath = "/api/make-llm-choice-next-position"
     return fetch(`${apiUrl}${apiPath}`, {
         method: "POST",
