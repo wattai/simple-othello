@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 from typing import Annotated
 
 from openai import OpenAI
@@ -8,6 +9,7 @@ from pydantic import BaseModel, Field
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+CORS_ALLOW_ORIGINS: list[str] = os.getenv("CORS_ALLOW_ORIGINS").split(",")
 
 class LlmOtheller:
     def __init__(self):
@@ -76,12 +78,7 @@ class OutFromLlm(BaseModel):
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://simple-othello-wattais-projects.vercel.app",
-        "https://simple-othello.vercel.app",
-        "http://localhost:5500",
-        "http://127.0.0.1:5500",
-    ],
+    allow_origins=CORS_ALLOW_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
